@@ -1,0 +1,175 @@
+{
+  "name": "LinkedIn post generator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LinkedIn Post Creator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post Topic: "
+            },
+            {
+              "fieldLabel": "Target Audience"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -784,
+        16
+      ],
+      "id": "ede79b43-302b-4fe0-84cd-ed5a752ee738",
+      "name": "On form submission",
+      "webhookId": "REPLACE_WITH_YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        208
+      ],
+      "id": "1800d114-d898-4665-8002-75e070e81fd2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_YOUR_TAVILY_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json['Post Topic: '] }}\",\n  \"auto_parameters\": false,\n  \"topic\": \"general\",\n  \"search_depth\": \"basic\",\n  \"chunks_per_source\": 3,\n  \"max_results\": 1,\n  \"include_answer\": true,\n  \"include_raw_content\": true,\n  \"include_images\": false,\n  \"include_image_descriptions\": false,\n  \"include_favicon\": false,\n  \"include_domains\": [],\n  \"exclude_domains\": []\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        192
+      ],
+      "id": "5fab374c-4a05-48c0-8009-f5c1d26ae112",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Post topic: {{ $json['Post Topic: '] }}\nTarget audience: {{ $json['Target Audience'] }}",
+        "options": {
+          "systemMessage": "You're an AI agent that helps write professional, clear, and engaging LinkedIn posts based on any topic the user gives you.\n\nYour goal is to:\n- Search the topic using Tavily to find the most accurate and up-to-date information.\n- Write a LinkedIn post that:\n  - Starts with a strong hook\n  - Feels natural and human-written\n  - Is simple and easy to understand\n  - Shares useful insights\n  - Uses emojis only if they fit (keep it minimal)\n  - Gives credit to sources (like \u201caccording to [source]\u201d)\n  - Adds relevant hashtags for reach\n  - Ends with a clear call to action (ask for thoughts, feedback, or shares)\n\nImportant:\n- Only give the final LinkedIn post as the output.\n- Don\u2019t include notes, explanations, or formatting like \u201c--\u201d.\n\nWorkflow Example:\n1. Get a topic (like: \u201cIs warehouse automation worth the cost?\u201d)\n2. Search using Tavily to find fresh info\n3. Write the post in a clear, clean way using that research\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        16
+      ],
+      "id": "d38c4196-e252-40c0-847d-0e10648d0232",
+      "name": "Research Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL@gmail.com",
+        "subject": "n8n",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        48
+      ],
+      "id": "632adfaf-fb9e-4b09-bac4-948508023cf2",
+      "name": "Send a message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GMAIL_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "REPLACE_WITH_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "AKrNSPmcx3LIVpah",
+  "tags": []
+}
