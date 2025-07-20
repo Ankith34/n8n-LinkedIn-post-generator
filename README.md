@@ -1,4 +1,4 @@
-# 🤖 LinkedIn Post Generator – n8n Workfloww
+# 🤖 LinkedIn Post Generator – n8n Workflow
 
 This is an n8n workflow that helps you create high-quality LinkedIn posts using AI and real-time search.
 
